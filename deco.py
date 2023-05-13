@@ -1,8 +1,8 @@
 import time
 
 
-filename1 = "E:/Self_education/Pal_analitik/1C_Repo/01Klientu.xlsx"
-filename2 = "E:/Self_education/Pal_analitik/1C_Repo/02Продажи.xlsx"
+filename1 = "/home/izevsl/Документы/Analitic_reporter/1C_Repo/01Klientu.xlsx"
+filename2 = "/home/izevsl/Документы/Analitic_reporter/1C_Repo/02Продажи.xlsx"
 
 # Декоратор який виводить інформацію якщо файл зчитано
 def file_parsed(func):

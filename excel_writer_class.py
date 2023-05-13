@@ -37,7 +37,7 @@ class Report:
             # Робимо нумерацію
             self.ws.cell(row=i + 3, column=cell_start, value=i)
 
-    def align_centre(self, start_row: int = 3, start_column: int = 1) -> None:
+    def align_centre(self, start_row: int = 2, start_column: int = 1) -> None:
         """Відцентровує всі данні у файлі по центру"""
         for row in self.ws.iter_rows(min_row=start_row, min_col=start_column):
             for cell in row:
@@ -74,7 +74,7 @@ class Report:
     ) -> None:
         """Функція для створення графіків"""
         # TODO: ===========================
-        # Приклад використання chart(1, 2, 3, 4, 5, 6, 7)
+        # Приклад використання chart(1, 2, 3, 4, 5, 6, 7, 8
         # 1) - рядок де починаються данні(числа) ! з назвою колонок ВАЖЛИВО !
         # 2) - стовпець де почианються данні
         # 3) - рядок де закінчуються данні для графіка
@@ -106,6 +106,8 @@ class Report:
         chart.title = "Sales department"
         chart.x_axis.title = "Name"
         chart.y_axis.title = "Sales"
+        chart.width = 33
+        chart.height = 12
 
         # Тут ми просто ствоюємо графік і розміщаємо його де нам потрібно
         self.ws.add_chart(chart, chart_placement)
