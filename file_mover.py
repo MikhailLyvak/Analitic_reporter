@@ -11,7 +11,7 @@ into folder named -> Звіти за 'сьогоднішня дата' <-
 
 
 def file_mover() -> None:
-    LST = [".xlsx", ".txt"]
+    LST = [".xlsx"]
     
     now = datetime.now().strftime("%d_%m_%Y")
     folder_name = f"Report_for_{now}"
