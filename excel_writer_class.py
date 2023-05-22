@@ -1,17 +1,20 @@
 from openpyxl import Workbook
 from openpyxl.styles import Alignment
 from openpyxl.chart import BarChart, Reference, Series
-from openpyxl.styles import Border, Side, NamedStyle, Font
+from openpyxl.styles import Border, Side, NamedStyle, Font, numbers
+from openpyxl import load_workbook
 
 
 class Report:
-    wb = Workbook()
-    ws = wb.active
+    # wb = Workbook()
+    # ws = wb.active
 
     def __init__(self, data: list, report_name: str = None) -> None:
         self.data = data
         self.report_name = report_name
         self.repo_range = len(data) + 1
+        self.wb = Workbook()
+        self.ws = self.wb.active
 
     def write_data(
         self, row_start: int = 3, cell_start: int = 3, titles: list = None
@@ -35,7 +38,7 @@ class Report:
             # Робимо заголовок
             self.ws.cell(row=row_start, column=cell_start, value="№ п/п")
             # Робимо нумерацію
-            self.ws.cell(row=i + 3, column=cell_start, value=i)
+            self.ws.cell(row=i + row_start, column=cell_start, value=i)
 
     def align_centre(self, start_row: int = 2, start_column: int = 1) -> None:
         """Відцентровує всі данні у файлі по центру"""
@@ -44,22 +47,40 @@ class Report:
                 cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
 
     def borders(self, x_start: int = 3, y_start: int = 2) -> None:
-        """Функція для обведення клітинок"""
+        """Function to apply borders to cells"""
         thick = Side(border_style="thin")
-
-        for rows in self.ws.iter_rows(
-            min_row=x_start, max_row=self.ws.max_row, min_col=y_start
+        
+        # Find the last column with data
+        last_column = self.ws.max_column
+        for col in reversed(range(y_start, self.ws.max_column + 1)):
+            is_empty = True
+            for row in self.ws.iter_rows(min_row=x_start, max_row=self.ws.max_row, min_col=col, max_col=col):
+                for cell in row:
+                    if cell.value is not None:
+                        is_empty = False
+                        break
+                if not is_empty:
+                    break
+            if not is_empty:
+                last_column = col
+                break
+        
+        for row in self.ws.iter_rows(
+            min_row=x_start, max_row=self.ws.max_row, min_col=y_start, max_col=last_column
         ):
-            for cell in rows:
+            for cell in row:
                 cell.border = Border(top=thick, left=thick, right=thick, bottom=thick)
 
-    def zagolovok(self, place: list = ["B2", "E2"]):
+    def zagolovok(self, place: list = ["B2", "E2"], height: int = 40):
+        placement = int(str(place[0])[1:])
+        
         self.ws[place[0]].value = self.report_name
         self.ws.merge_cells(f"{place[0]}:{place[1]}")
         font = Font(
-            name="Times New Roman", size=24, color="123456", bold=True, condense=True
+            name="Times New Roman", size=24, color="123456", italic=True, bold=True, condense=True
         )
         self.ws[place[0]].font = font
+        self.ws.row_dimensions[placement].height = height
 
     def chart(
         self,
@@ -103,17 +124,75 @@ class Report:
         # titles_from_data=True з data бере строки (тут це місяці і називає ними рядки)
         chart.add_data(data, titles_from_data=True)
         chart.set_categories(categories)
-        chart.title = "Sales department"
-        chart.x_axis.title = "Name"
-        chart.y_axis.title = "Sales"
+        chart.title = "Продажи по місяцям"
+        chart.x_axis.title = "Місяць"
+        chart.y_axis.title = "Сума продаж"
         chart.width = 33
         chart.height = 12
 
         # Тут ми просто ствоюємо графік і розміщаємо його де нам потрібно
         self.ws.add_chart(chart, chart_placement)
         
-    def design_titles(self) -> None:
-        pass
+    def design_titles(self, row_number:int = 3) -> None:
+        font = Font(bold=True)
+        for cell in self.ws[row_number]:
+            cell.font = font
     
-    def design_data(self) -> None:
-        pass
+    def money_format(
+        self,
+        start_row: int,
+        start_col: int,
+        end_row: int = None,
+        end_col: int = None
+    ) -> None:
+        for row in self.ws.iter_rows(min_row=start_row, min_col=start_col, max_row=end_row, max_col=end_col):
+            for cell in row:
+                cell.number_format = '#,##0.00'
+    
+    def format_cols_width(
+        self,
+        column_width: int,
+        start_col: str,
+        end_col: str
+    ) -> None:
+        for column in self.ws[start_col:end_col]:
+            self.ws.column_dimensions[column[0].column_letter].width = column_width
+    
+    def name_align_left(
+        self,
+        start_row: int,
+        start_col: int,
+        max_col: int = None
+    ) -> None:       
+        for row in self.ws.iter_rows(min_row=start_row, min_col=start_col, max_col=max_col):
+            for cell in row:
+                cell.alignment = Alignment(horizontal="left")
+                
+    def print_sum(
+        self,
+        data: list,
+        col_start: int = 6
+    ) -> None:
+        border = Border(
+            bottom=Side(style='thin'),
+            left=Side(style='thin'),
+            right=Side(style='thin')
+        )
+
+        for index, value in enumerate(data):
+            col = col_start + index
+            row = self.repo_range + 3
+            cell = self.ws.cell(row=row, column=col)
+            cell.value = value
+            cell.border = border
+        
+        font = Font(bold=True)
+        for cell in self.ws[self.repo_range + 3]:
+            cell.font = font
+            
+    def load_workbook(self, filename: str) -> None:
+        self.wb = load_workbook(filename)
+        self.ws = self.wb.active
+
+    def save(self, filename: str) -> None:
+        self.wb.save(filename)

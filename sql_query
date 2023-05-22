@@ -1,0 +1,46 @@
+SELECT *
+FROM sales;
+
+SELECT *
+FROM customers;
+
+
+SELECT c.company, s.manager, SUM(s.sales) as total_sales, SUM(s.sales) * 0.18 as clear_income
+FROM customers as c
+LEFT JOIN sales as s
+ON c.company = s.company
+WHERE strftime('%m', s.date) = '11' and strftime('%Y', s.date) = '2022'
+GROUP BY c.company
+HAVING total_sales IS NOT NULL
+ORDER BY total_sales DESC;
+
+
+SELECT c.city, s.manager, SUM(s.sales) as total_sales
+FROM customers as c
+LEFT JOIN sales as s
+ON c.company = s.company
+WHERE strftime('%m', s.date) = '06' and strftime('%Y', s.date) = '2022'
+GROUP BY c.company
+HAVING total_sales IS NOT NULL
+ORDER BY total_sales DESC;
+
+
+SELECT manager, MAX(sales) as max_sale
+FROM sales
+WHERE strftime('%m', date) = '06'
+GROUP BY manager
+ORDER BY max_sale;
+
+SELECT manager, MIN(sales) as min_sale
+FROM sales
+WHERE strftime('%m', date) = '06'
+GROUP BY manager
+ORDER BY min_sale;
+
+SELECT manager, SUM(sales) as sales_for_month
+FROM sales
+WHERE strftime('%m', date) = '06'
+GROUP BY manager
+ORDER BY sales_for_month DESC;
+
+
