@@ -1,17 +1,19 @@
 from openpyxl import Workbook
 from openpyxl.styles import Alignment
 from openpyxl.chart import BarChart, Reference, Series
-from openpyxl.styles import Border, Side, NamedStyle, Font
+from openpyxl.styles import Border, Side, NamedStyle, Font, numbers
 
 
 class Report:
-    wb = Workbook()
-    ws = wb.active
+    # wb = Workbook()
+    # ws = wb.active
 
     def __init__(self, data: list, report_name: str = None) -> None:
         self.data = data
         self.report_name = report_name
         self.repo_range = len(data) + 1
+        self.wb = Workbook()
+        self.ws = self.wb.active
 
     def write_data(
         self, row_start: int = 3, cell_start: int = 3, titles: list = None
@@ -57,9 +59,10 @@ class Report:
         self.ws[place[0]].value = self.report_name
         self.ws.merge_cells(f"{place[0]}:{place[1]}")
         font = Font(
-            name="Times New Roman", size=24, color="123456", bold=True, condense=True
+            name="Times New Roman", size=24, color="123456", italic=True, bold=True, condense=True
         )
         self.ws[place[0]].font = font
+        self.ws.row_dimensions[2].height = 40
 
     def chart(
         self,
@@ -112,8 +115,59 @@ class Report:
         # Тут ми просто ствоюємо графік і розміщаємо його де нам потрібно
         self.ws.add_chart(chart, chart_placement)
         
-    def design_titles(self) -> None:
-        pass
+    def design_titles(self, row_number:int = 3) -> None:
+        font = Font(bold=True)
+        for cell in self.ws[row_number]:
+            cell.font = font
     
-    def design_data(self) -> None:
-        pass
+    def money_format(
+        self,
+        start_row: int,
+        start_col: int,
+        end_row: int = None,
+        end_col: int = None
+    ) -> None:
+        for row in self.ws.iter_rows(min_row=start_row, min_col=start_col, max_row=end_row, max_col=end_col):
+            for cell in row:
+                cell.number_format = '#,##0.00'
+    
+    def format_cols_width(
+        self,
+        column_width: int,
+        start_col: str,
+        end_col: str
+    ) -> None:
+        for column in self.ws[start_col:end_col]:
+            self.ws.column_dimensions[column[0].column_letter].width = column_width
+    
+    def name_align_left(
+        self,
+        start_row: int,
+        start_col: int,
+        max_col: int = None
+    ) -> None:       
+        for row in self.ws.iter_rows(min_row=start_row, min_col=start_col, max_col=max_col):
+            for cell in row:
+                cell.alignment = Alignment(horizontal="left")
+                
+    def print_sum(
+        self,
+        data: list,
+        col_start: int = 6
+    ) -> None:
+        border = Border(
+            bottom=Side(style='thin'),
+            left=Side(style='thin'),
+            right=Side(style='thin')
+        )
+
+        for index, value in enumerate(data):
+            col = col_start + index
+            row = self.repo_range + 3
+            cell = self.ws.cell(row=row, column=col)
+            cell.value = value
+            cell.border = border
+        
+        font = Font(bold=True)
+        for cell in self.ws[self.repo_range + 3]:
+            cell.font = font
