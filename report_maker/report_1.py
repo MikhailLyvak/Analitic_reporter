@@ -22,7 +22,7 @@ def report_1(data: list, year: int) -> None:
             "Грудень",
             "Сума"
         ]
-    res = Report(data=data, report_name=f"Roport for year {year}")
+    res = Report(data=data, report_name=f"Звіт продаж менеджерів по місяцям за {year} рік")
     res.write_data(titles=titles)
     res.number_columns()
     res.borders()
@@ -37,4 +37,4 @@ def report_1(data: list, year: int) -> None:
     res.ws.row_dimensions[2].height = 40
     res.name_align_left(4, 3)
     
-    res.wb.save("class.xlsx")
+    res.wb.save("Report0.xlsx")

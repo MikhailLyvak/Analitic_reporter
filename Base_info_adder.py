@@ -71,41 +71,7 @@ def create_and_update_sales_tb():
         )
 
 
-# def get_date_sql(year: int) -> list:
-#     with sql.connect("Base_zvit1.db") as db:
-#         curs = db.cursor()
-#         curs.execute(
-#             f"""SELECT manager,
-#                 ROUND(SUM(CASE WHEN strftime('%m', date) = '01' THEN sales ELSE 0 END), 2) AS a,
-#                 ROUND(SUM(CASE WHEN strftime('%m', date) = '02' THEN sales ELSE 0 END), 2) AS b,
-#                 ROUND(SUM(CASE WHEN strftime('%m', date) = '03' THEN sales ELSE 0 END), 2) AS c,
-#                 ROUND(SUM(CASE WHEN strftime('%m', date) = '04' THEN sales ELSE 0 END), 2) AS d,
-#                 ROUND(SUM(CASE WHEN strftime('%m', date) = '05' THEN sales ELSE 0 END), 2) AS e,
-#                 ROUND(SUM(CASE WHEN strftime('%m', date) = '06' THEN sales ELSE 0 END), 2) AS f,
-#                 ROUND(SUM(CASE WHEN strftime('%m', date) = '07' THEN sales ELSE 0 END), 2) AS g,
-#                 ROUND(SUM(CASE WHEN strftime('%m', date) = '08' THEN sales ELSE 0 END), 2) AS j,
-#                 ROUND(SUM(CASE WHEN strftime('%m', date) = '09' THEN sales ELSE 0 END), 2) AS n,
-#                 ROUND(SUM(CASE WHEN strftime('%m', date) = '10' THEN sales ELSE 0 END), 2) AS t,
-#                 ROUND(SUM(CASE WHEN strftime('%m', date) = '11' THEN sales ELSE 0 END), 2) AS o,
-#                 ROUND(SUM(CASE WHEN strftime('%m', date) = '12' THEN sales ELSE 0 END), 2) AS p,
-#                 ROUND(SUM(CASE WHEN strftime('%Y', date) = '{year}' THEN sales ELSE 0 END), 2) AS suma
-#             FROM sales
-#             WHERE strftime('%Y', date) = '{year}'
-#             GROUP BY manager;"""
-#         )
-#     sales_report_by_month = []
-#     while True:
-#         next_row = curs.fetchone()
-#         if next_row:
-#             sales_report_by_month.append(list(next_row))
-#         else:
-#             break
-
-#     # print(sales_report_by_month)
-
-#     return sales_report_by_month
-
-def get_date_sql(year: int, month: int) -> list:
+def get_date_sql(year: int = 2022, month: int = 6) -> list:
     with sql.connect("Base_zvit1.db") as db:
         curs = db.cursor()
         query = f"""
@@ -140,7 +106,7 @@ def get_date_sql(year: int, month: int) -> list:
 
 
 
-def get_data_report_2(year: int, month: int = None) -> list:
+def get_data_report_2(year: int = 2022, month: int = 6) -> list:
     with sql.connect("Base_zvit1.db") as db:
         curs = db.cursor()
         curs.execute(
@@ -168,7 +134,7 @@ def get_data_report_2(year: int, month: int = None) -> list:
     return sales_report_by_month
 
 
-def get_data_report_sum_2(month: int = 6, year: int = 2022) -> list:
+def get_data_report_sum_2(year: int = 2022, month: int = 6) -> list:
     with sql.connect("Base_zvit1.db") as db:
         curs = db.cursor()
         curs.execute(
@@ -186,5 +152,123 @@ def get_data_report_sum_2(month: int = 6, year: int = 2022) -> list:
 
     return sales_report_by_month
 
-get_data_report_sum_2(6, 2022)
-# get_date_sql(2022)
+
+def get_data_report_3(year: int = 2022, month: int = 6) -> list:
+    with sql.connect("Base_zvit1.db") as db:
+        curs = db.cursor()
+        curs.execute(
+            f"""
+                SELECT c.city, s.manager, SUM(s.sales) as total_sales, SUM(s.sales) * 0.18 as clear_income
+                FROM customers as c
+                LEFT JOIN sales as s
+                ON c.company = s.company
+                WHERE strftime('%m', s.date) = '{str(month).zfill(2)}' and strftime('%Y', s.date) = '{year}' and s.manager IS NOT NULL
+                GROUP BY c.city
+                HAVING total_sales IS NOT NULL
+                ORDER BY total_sales DESC;
+            """
+        )
+    sales_report_by_month = []
+    while True:
+        next_row = curs.fetchone()
+        if next_row:
+            sales_report_by_month.append(list(next_row))
+        else:
+            break
+
+    print(sales_report_by_month)
+
+    return sales_report_by_month
+
+
+def get_data_report_sum_3(year: int = 2022, month: int = 6) -> list:
+    with sql.connect("Base_zvit1.db") as db:
+        curs = db.cursor()
+        curs.execute(
+            f"""
+                SELECT SUM(s.sales) as total_sales, SUM(s.sales) * 0.18 as total_income
+                FROM customers as c
+                LEFT JOIN sales as s
+                ON c.company = s.company
+                WHERE strftime('%m', s.date) = '{month:02}' and strftime('%Y', s.date) = '{year}' and s.manager IS NOT NULL;
+            """
+        )
+    sales_report_by_month = list(curs.fetchone())
+
+    print(sales_report_by_month)
+
+    return sales_report_by_month
+
+
+def get_data_report_4_1(year: int = 2022, month: int = 6) -> list:
+    with sql.connect("Base_zvit1.db") as db:
+        curs = db.cursor()
+        curs.execute(
+            f"""
+                SELECT manager, strftime('%d-%m-%Y', date), MIN(sales) as min_sale
+                FROM sales
+                WHERE strftime('%m', date) = '{month:02}' and strftime('%Y', date) = '{year}'
+                GROUP BY manager
+                ORDER BY min_sale;
+            """
+        )
+    sales_report_by_month = []
+    while True:
+        next_row = curs.fetchone()
+        if next_row:
+            sales_report_by_month.append(list(next_row))
+        else:
+            break
+
+    print(sales_report_by_month)
+
+    return sales_report_by_month
+
+def get_data_report_4_2(year: int = 2022, month: int = 6) -> list:
+    with sql.connect("Base_zvit1.db") as db:
+        curs = db.cursor()
+        curs.execute(
+            f"""
+                SELECT manager, strftime('%d-%m-%Y', date), MAX(sales) as max_sale
+                FROM sales
+                WHERE strftime('%m', date) = '{month:02}' and strftime('%Y', date) = '{year}'
+                GROUP BY manager
+                ORDER BY max_sale;
+            """
+        )
+    sales_report_by_month = []
+    while True:
+        next_row = curs.fetchone()
+        if next_row:
+            sales_report_by_month.append(list(next_row))
+        else:
+            break
+
+    print(sales_report_by_month)
+
+    return sales_report_by_month
+
+
+def get_data_report_4_3(year: int = 2022, month: int = 6) -> list:
+    with sql.connect("Base_zvit1.db") as db:
+        curs = db.cursor()
+        curs.execute(
+            f"""
+                SELECT manager, SUM(sales) * 0.18 as total_income
+                FROM sales
+                WHERE strftime('%m', date) = '{month:02}' and strftime('%Y', date) = '{year}'
+                GROUP BY manager;
+            """
+        )
+    sales_report_by_month = []
+    while True:
+        next_row = curs.fetchone()
+        if next_row:
+            sales_report_by_month.append(list(next_row))
+        else:
+            break
+
+    print(sales_report_by_month)
+
+    return sales_report_by_month
+
